@@ -53,6 +53,7 @@ public class UserController {
 
     @PostMapping(path = "/api/login", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<String> loginUser(@RequestBody MultiValueMap<String,String> data){
+        System.out.println("api");
         User username = userRepository.findFirstByUsername(data.getFirst("username"));
         BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder(10);
         System.out.println(passwordEncoder.matches(data.getFirst("password"),username.getPassword()));
