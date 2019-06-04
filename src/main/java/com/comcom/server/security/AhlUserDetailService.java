@@ -13,7 +13,10 @@ import java.util.List;
 
 @Service
 public class AhlUserDetailService implements UserDetailsService {
-    private UserRepository userRepository;
+    public static final String ROLE_USER="user";//NO I18N
+    public static final String ROLE_ADMIN="admin";//NO I18N
+
+    public UserRepository userRepository;
 
     public  AhlUserDetailService(UserRepository userRepository){
         this.userRepository = userRepository;
@@ -21,9 +24,14 @@ public class AhlUserDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        User firstByUsername = userRepository.findFirstByUsername(username);
+        User user = userRepository.findFirstByUsername(username);
         List<SimpleGrantedAuthority> data=new ArrayList<SimpleGrantedAuthority>();
-        data.add(new SimpleGrantedAuthority("user"));
-        return new org.springframework.security.core.userdetails.User(firstByUsername.getUsername(),firstByUsername.getPassword(),data);
+        if(user.isAdmin()){
+            data.add(new SimpleGrantedAuthority(ROLE_USER));
+            data.add(new SimpleGrantedAuthority(ROLE_ADMIN));
+        }else {
+            data.add(new SimpleGrantedAuthority(ROLE_USER));
+        }
+        return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),data);
     }
 }

@@ -8,10 +8,7 @@ import javax.validation.constraints.Email;
 
 @Document(collection = "users")
 public class User {
-    public static final String PASSWORD="password";
-    public static final String USERNAME="username";
-    public static final String FULLNAME="fullname";
-    public static final String EMAIL="email";
+
 
     public boolean isAdmin() {
         return admin;
@@ -72,6 +69,11 @@ public class User {
         this.token = token;
     }
 
+
+    public ObjectId getId() {
+        return id;
+    }
+
     @Id
     private ObjectId id;
     private boolean admin;
@@ -96,7 +98,7 @@ public class User {
                 '}';
     }
 
-    public boolean isValidEmailAddress(String email) {
+    public static boolean isValidEmailAddress(String email) {
         String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
         java.util.regex.Matcher m = p.matcher(email);

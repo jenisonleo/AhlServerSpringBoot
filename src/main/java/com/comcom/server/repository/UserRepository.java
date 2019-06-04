@@ -8,4 +8,8 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
 
         public User findFirstByUsername(String username);
 
+        public User findFirstByToken(String token);
+
+        public User findFirstByEmail(String email);
+
 }

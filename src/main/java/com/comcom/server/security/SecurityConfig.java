@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -39,12 +39,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable().
+        http.
+                cors().and()
+                .csrf().disable().
                 authorizeRequests()
-                .antMatchers("/*").permitAll()
-                .anyRequest().authenticated().and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .antMatchers("/api/login").permitAll()
+                .antMatchers("/api/register").anonymous()
+                .anyRequest().authenticated();
+//                .and()
+//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http
-                .addFilterBefore(new AuthFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new AuthFilter(ahlUserDetailService), UsernamePasswordAuthenticationFilter.class);
     }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/api/login","/api/register");
+    }
+
+    @Bean
+    BCryptPasswordEncoder getPasswordEncoder() {
+        return new BCryptPasswordEncoder(10);
+    }
+
 }
