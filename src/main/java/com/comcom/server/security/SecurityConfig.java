@@ -23,13 +23,12 @@ import static com.comcom.server.security.AuthFilter.ROLE_USER;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private UserRepository ahlUserDetailService;
+    private UserRepository userRepository;
     @Autowired
     private AhlAuthenticationProvider ahlAuthenticationProvider;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        System.out.println("configure"+ahlAuthenticationProvider.toString());
         auth.authenticationProvider(ahlAuthenticationProvider);
     }
 
@@ -38,11 +37,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.
                 csrf().disable().
                 authorizeRequests()
-                .antMatchers("/api/events").hasRole(ROLE_ADMIN)
+                .antMatchers("/api/events").hasRole(ROLE_USER)
                 .antMatchers("/api/infos").hasRole(ROLE_USER)
+                .antMatchers("/api/event").hasRole(ROLE_ADMIN)
+                .antMatchers("/api/info").hasRole(ROLE_ADMIN)
                 .anyRequest().authenticated();
         http
-                .addFilterBefore(new AuthFilter(ahlUserDetailService), BasicAuthenticationFilter.class);
+                .addFilterBefore(new AuthFilter(userRepository), BasicAuthenticationFilter.class);
     }
 
     @Override

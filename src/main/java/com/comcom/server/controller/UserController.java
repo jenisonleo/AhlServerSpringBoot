@@ -2,7 +2,6 @@ package com.comcom.server.controller;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.comcom.server.Test;
 import com.comcom.server.bcrypt.BCryptPasswordEncoder;
 import com.comcom.server.entity.User;
 import com.comcom.server.repository.UserRepository;
@@ -13,9 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 @RestController
 public class UserController {

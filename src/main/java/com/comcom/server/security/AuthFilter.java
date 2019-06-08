@@ -33,7 +33,6 @@ public class AuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        System.out.println("data");
         if(request.getHeader("Authorization")==null){
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"authorization not found");
             return;
@@ -56,9 +55,7 @@ public class AuthFilter extends OncePerRequestFilter {
                 data.getPassword(),
                 authorities
         );
-//        authenticationToken.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
-        System.out.println("data"+"sucees");
     }
 }
