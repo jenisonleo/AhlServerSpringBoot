@@ -37,18 +37,6 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping(path = "/users")
-    public String getUsers(){
-        List<User> all = userRepository.findAll();
-        all.forEach(new Consumer<User>() {
-            @Override
-            public void accept(User customer) {
-                System.out.println("data"+" "+customer.getEmail());
-            }
-        });
-        return "success"+all.size();
-    }
-
     @PostMapping(path="/api/register",consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<String> newUserRegistration(@RequestBody MultiValueMap<String,String> data){
         if(!(data.containsKey(USERNAME) && data.containsKey(FULLNAME) && data.containsKey(EMAIL) && data.containsKey(PASSWORD))){
@@ -93,7 +81,7 @@ public class UserController {
         }
         JsonObject jsonObject=new JsonObject();
         jsonObject.addProperty("token",savedResp.getToken());
-        jsonObject.addProperty("user",savedResp.getFullname());
+        jsonObject.addProperty("name",savedResp.getFullname());
         jsonObject.addProperty("email",savedResp.getEmail());
         jsonObject.addProperty("isAdmin",savedResp.isAdmin());
         jsonObject.addProperty("message","User registered Successfully");
@@ -124,7 +112,7 @@ public class UserController {
         User savedResp = userRepository.save(username);
         JsonObject jsonObject=new JsonObject();
         jsonObject.addProperty("token",savedResp.getToken());
-        jsonObject.addProperty("user",savedResp.getFullname());
+        jsonObject.addProperty("name",savedResp.getFullname());
         jsonObject.addProperty("email",savedResp.getEmail());
         jsonObject.addProperty("isAdmin",savedResp.isAdmin());
         jsonObject.addProperty("message","login successful");

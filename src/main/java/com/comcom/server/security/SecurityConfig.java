@@ -1,55 +1,48 @@
 package com.comcom.server.security;
 
 import com.comcom.server.bcrypt.BCryptPasswordEncoder;
+import com.comcom.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import static com.comcom.server.security.AuthFilter.ROLE_ADMIN;
+import static com.comcom.server.security.AuthFilter.ROLE_USER;
+
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true,securedEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    AhlUserDetailService ahlUserDetailService;
-    @Override
-    @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
+    private UserRepository ahlUserDetailService;
+    @Autowired
+    private AhlAuthenticationProvider ahlAuthenticationProvider;
 
-    @Bean
-    public DaoAuthenticationProvider provider(){
-        DaoAuthenticationProvider daoAuthenticationProvider=new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(ahlUserDetailService);
-        daoAuthenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
-        return daoAuthenticationProvider;
-    }
     @Override
-    protected UserDetailsService userDetailsService() {
-        return ahlUserDetailService;
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        System.out.println("configure"+ahlAuthenticationProvider.toString());
+        auth.authenticationProvider(ahlAuthenticationProvider);
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.
-                cors().and()
-                .csrf().disable().
+                csrf().disable().
                 authorizeRequests()
-                .antMatchers("/api/login").permitAll()
-                .antMatchers("/api/register").anonymous()
+                .antMatchers("/api/events").hasRole(ROLE_ADMIN)
+                .antMatchers("/api/infos").hasRole(ROLE_USER)
                 .anyRequest().authenticated();
-//                .and()
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http
-                .addFilterBefore(new AuthFilter(ahlUserDetailService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new AuthFilter(ahlUserDetailService), BasicAuthenticationFilter.class);
     }
 
     @Override

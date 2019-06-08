@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.comcom.server.security.AuthFilter.ROLE_ADMIN;
+import static com.comcom.server.security.AuthFilter.ROLE_USER;
+
 @Service
 public class AhlUserDetailService implements UserDetailsService {
-    public static final String ROLE_USER="user";//NO I18N
-    public static final String ROLE_ADMIN="admin";//NO I18N
+
 
     public UserRepository userRepository;
 
@@ -27,10 +29,10 @@ public class AhlUserDetailService implements UserDetailsService {
         User user = userRepository.findFirstByUsername(username);
         List<SimpleGrantedAuthority> data=new ArrayList<SimpleGrantedAuthority>();
         if(user.isAdmin()){
-            data.add(new SimpleGrantedAuthority(ROLE_USER));
-            data.add(new SimpleGrantedAuthority(ROLE_ADMIN));
+            data.add(new SimpleGrantedAuthority("ROLE_"+ROLE_USER));
+            data.add(new SimpleGrantedAuthority("ROLE_"+ROLE_ADMIN));
         }else {
-            data.add(new SimpleGrantedAuthority(ROLE_USER));
+            data.add(new SimpleGrantedAuthority("ROLE_"+ROLE_USER));
         }
         return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),data);
     }
