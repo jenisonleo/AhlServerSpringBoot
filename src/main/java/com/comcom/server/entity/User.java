@@ -5,6 +5,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.Email;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "users")
 public class User {
@@ -74,6 +76,14 @@ public class User {
         return id;
     }
 
+    public void setNotificationDetails(NotificationDetails notificationDetails) {
+        this.notificationDetails = notificationDetails;
+    }
+
+    public NotificationDetails getNotificationDetails(){
+        return notificationDetails;
+    }
+
     @Id
     private ObjectId id;
     private boolean admin;
@@ -83,11 +93,12 @@ public class User {
     private String email;
     private String password;
     private String token;
+    private NotificationDetails notificationDetails;
 
     @Override
     public String toString() {
         return "User{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", admin=" + admin +
                 ", verified=" + verified +
                 ", username='" + username + '\'' +
@@ -95,6 +106,7 @@ public class User {
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 ", token='" + token + '\'' +
+                ((notificationDetails==null)?"": (", notificationDetails=" + notificationDetails.toString())) +
                 '}';
     }
 
@@ -103,5 +115,61 @@ public class User {
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
         java.util.regex.Matcher m = p.matcher(email);
         return m.matches();
+    }
+
+
+
+    public enum OsType{
+        android,ios
+    }
+
+    public static class NotificationDetails{
+        private ArrayList<DeviceTokenParams> detailslist;
+
+        public ArrayList<DeviceTokenParams> getDetailslist() {
+            return detailslist;
+        }
+
+        public void setDetailslist(ArrayList<DeviceTokenParams> detailslist) {
+            this.detailslist = detailslist;
+        }
+
+
+
+        public static class DeviceTokenParams{
+            private String deviceId;
+            private OsType osType;
+
+            public String getDeviceId() {
+                return deviceId;
+            }
+
+            public void setDeviceId(String deviceId) {
+                this.deviceId = deviceId;
+            }
+
+            public OsType getOsType() {
+                return osType;
+            }
+
+            public void setOsType(OsType osType) {
+                this.osType = osType;
+            }
+
+            @Override
+            public String toString() {
+                return "DeviceTokenParams{" +
+                        "deviceId='" + deviceId + '\'' +
+                        ", osType=" + osType +
+                        '}';
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "NotificationDetails{" +
+                    "detailslist=" + detailslist.toString() +
+                    '}';
+        }
     }
 }
