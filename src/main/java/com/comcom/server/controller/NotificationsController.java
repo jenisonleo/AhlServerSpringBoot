@@ -3,10 +3,7 @@ package com.comcom.server.controller;
 
 import com.comcom.server.entity.User;
 import com.comcom.server.repository.UserRepository;
-import com.google.common.collect.Multimap;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.*;
 import com.google.gson.JsonObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,8 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Map;
 
 @RestController
 public class NotificationsController {
@@ -53,11 +51,7 @@ public class NotificationsController {
             return new ResponseEntity<String>(jsonObject.toString(),null, HttpStatus.BAD_REQUEST);
         }
         String username = ((User) authentication.getPrincipal()).getUsername();
-        List<User> results = userRepository.findbyDeviceId(token);
-        if(results.size()>0) {
-            results.forEach(datas-> datas.getNotificationDetails().getDetailslist().removeIf(deviceTokenParams -> deviceTokenParams.getDeviceId().equals(token)));
-            userRepository.saveAll(results);
-        }
+        removeDeviceToken(token);
         User dbdata = userRepository.findFirstByUsername(username);
         User.NotificationDetails notificationDetails = dbdata.getNotificationDetails();
         if(notificationDetails==null){
@@ -87,6 +81,14 @@ public class NotificationsController {
         return new ResponseEntity<String>(jsonObject.toString(),null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    private void removeDeviceToken(String token) {
+        List<User> results = userRepository.findbyDeviceId(token);
+        if(results.size()>0) {
+            results.forEach(datas-> datas.getNotificationDetails().getDetailslist().removeIf(deviceTokenParams -> deviceTokenParams.getDeviceId().equals(token)));
+            userRepository.saveAll(results);
+        }
+    }
+
 
 //    @PostMapping(path = "/notifications/deregister",consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 //    public ResponseEntity<String> removeNotificationRegistration(@RequestBody MultiValueMap<String,String> data, Authentication authentication) {
@@ -94,7 +96,9 @@ public class NotificationsController {
 //    }
 
     @GetMapping(value = "/noti")
-    public String sendmess(){
+    public String sendmess()throws FirebaseMessagingException{
+        Map<String,String> message=new HashMap<>();
+        message.put("message","jenison");
         List<User> allDeviceId = userRepository.findAllDeviceId();
         ArrayList<String> data=new ArrayList<>();
         for(User user:allDeviceId){
@@ -106,25 +110,40 @@ public class NotificationsController {
                 }
             }
         }
-        ArrayList<String> testData=new ArrayList<>();
-        ArrayList<String> csv=new ArrayList<>();
-        for(int i=0;i<204;i++){
-            testData.add("datan_"+i);
+        int start=-1;
+
+        while(true) {
+            int from=start+1;
+            int to=start+100;
+            start+=100;
+            if(to>=data.size()-1){
+                to=data.size()-1;
+                if(to>=from) {
+                    sendmessage(from, to, data,message);
+                }
+                break;
+            }
+            if(to>=from) {
+                sendmessage(from, to, data,message);
+            }
         }
         System.out.println("size "+data.size());
-        Message message = Message.builder()
-                .putData("message", "hi")
-                .setToken("testtoken")
-                .build();
-
-// Send a message to the device corresponding to the provided
-// registration token.
-        try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("fcm "+response);
-        } catch (FirebaseMessagingException e) {
-            e.printStackTrace();
-        }
         return "succees";
+    }
+
+    private void sendmessage(int from, int to, ArrayList<String> data, Map<String, String> messageToSend) throws FirebaseMessagingException{
+        MulticastMessage message = MulticastMessage.builder()
+                .putAllData(messageToSend)
+                .addAllTokens(data.subList(from,to+1))
+                .build();
+        BatchResponse res = FirebaseMessaging.getInstance().sendMulticast(message);
+        for(int i=0;i<res.getResponses().size();i++){
+            SendResponse response = res.getResponses().get(i);
+            if(response.getException()!=null){
+                if(response.getException().getErrorCode().equals("registration-token-not-registered") || response.getException().getErrorCode().equals("invalid-argument")){
+                    removeDeviceToken(data.get(from+i));
+                }
+            }
+        }
     }
 }
