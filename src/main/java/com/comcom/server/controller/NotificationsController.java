@@ -10,10 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,39 +93,46 @@ public class NotificationsController {
 //    }
 
     @GetMapping(value = "/noti")
-    public String sendmess()throws FirebaseMessagingException{
+    public String sendmess(@RequestParam(value = "message") String customMessage)throws FirebaseMessagingException{
         Map<String,String> message=new HashMap<>();
-        message.put("message","jenison");
-        List<User> allDeviceId = userRepository.findAllDeviceId();
-        ArrayList<String> data=new ArrayList<>();
-        for(User user:allDeviceId){
-            if(user.getNotificationDetails()!=null){
-                if(user.getNotificationDetails().getDetailslist()!=null){
-                    for(User.NotificationDetails.DeviceTokenParams params:user.getNotificationDetails().getDetailslist()){
-                        data.add(params.getDeviceId());
+        message.put("custom",customMessage);
+        dispatchMessage(message);
+        return "succees";
+    }
+    public void dispatchMessage(Map<String,String> message){
+        try {
+            List<User> allDeviceId = userRepository.findAllDeviceId();
+            ArrayList<String> data = new ArrayList<>();
+            for (User user : allDeviceId) {
+                if (user.getNotificationDetails() != null) {
+                    if (user.getNotificationDetails().getDetailslist() != null) {
+                        for (User.NotificationDetails.DeviceTokenParams params : user.getNotificationDetails().getDetailslist()) {
+                            data.add(params.getDeviceId());
+                        }
                     }
                 }
             }
-        }
-        int start=-1;
+            int start = -1;
 
-        while(true) {
-            int from=start+1;
-            int to=start+100;
-            start+=100;
-            if(to>=data.size()-1){
-                to=data.size()-1;
-                if(to>=from) {
-                    sendmessage(from, to, data,message);
+            while (true) {
+                int from = start + 1;
+                int to = start + 100;
+                start += 100;
+                if (to >= data.size() - 1) {
+                    to = data.size() - 1;
+                    if (to >= from) {
+                        sendmessage(from, to, data, message);
+                    }
+                    break;
                 }
-                break;
+                if (to >= from) {
+                    sendmessage(from, to, data, message);
+                }
             }
-            if(to>=from) {
-                sendmessage(from, to, data,message);
-            }
+            System.out.println("size " + data.size());
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        System.out.println("size "+data.size());
-        return "succees";
     }
 
     private void sendmessage(int from, int to, ArrayList<String> data, Map<String, String> messageToSend) throws FirebaseMessagingException{
